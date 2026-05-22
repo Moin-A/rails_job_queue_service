@@ -13,4 +13,14 @@ class WorkerPool
   def thread_count
     @threads.count
   end
+
+  private
+
+  def claim_job
+    ActiveRecord::Base.transaction do
+      job = Job.pending.lock.first
+      job&.update!(status: "running")
+      job
+    end
+  end
 end
