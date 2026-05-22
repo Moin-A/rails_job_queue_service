@@ -28,6 +28,36 @@ RSpec.describe WorkerPool do
     end
   end
 
+  describe "#handle_failure" do
+    let(:pool)  { WorkerPool.new(concurrency: 1) }
+    let(:error) { RuntimeError.new("something went wrong") }
+
+    it "increments attempts and resets to pending when attempts < max_attempts" do
+      job = Job.create!(job_class: "TestJob", args: "[]", status: "running", attempts: 0, max_attempts: 3)
+
+      pool.send(:handle_failure, job, error, 1)
+
+      expect(job.reload.status).to eq("pending")
+      expect(job.reload.attempts).to eq(1)
+    end
+
+    it "marks job as dead when attempts reach max_attempts" do
+      job = Job.create!(job_class: "TestJob", args: "[]", status: "running", attempts: 2, max_attempts: 3)
+
+      pool.send(:handle_failure, job, error, 1)
+
+      expect(job.reload.status).to eq("dead")
+    end
+
+    it "stores the error message in last_error" do
+      job = Job.create!(job_class: "TestJob", args: "[]", status: "running", attempts: 0, max_attempts: 3)
+
+      pool.send(:handle_failure, job, error, 1)
+
+      expect(job.reload.last_error).to eq("something went wrong")
+    end
+  end
+
   describe "#claim_job" do
     let(:pool) { WorkerPool.new(concurrency: 1) }
 
