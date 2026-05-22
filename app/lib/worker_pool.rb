@@ -29,5 +29,17 @@ class WorkerPool
     args  = JSON.parse(job.args)
     klass.new.perform(*args)
     job.update!(status: "completed")
+  rescue => e
+    handle_failure(job, e, thread_id)
+  end
+
+  def handle_failure(job, error, thread_id)
+    new_attempts = job.attempts + 1
+
+    if new_attempts >= job.max_attempts
+      job.update!(status: "dead", attempts: new_attempts, last_error: error.message)
+    else
+      job.update!(status: "pending", attempts: new_attempts, last_error: error.message)
+    end
   end
 end
