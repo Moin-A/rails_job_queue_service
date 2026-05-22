@@ -4,6 +4,12 @@ class TestJob < ApplicationJob
   def perform(*args); end
 end
 
+class FailingJob < ApplicationJob
+  def perform
+    raise "something went wrong"
+  end
+end
+
 RSpec.describe WorkerPool do
   describe "#start" do
     it "creates threads equal to configured concurrency" do
@@ -25,6 +31,20 @@ RSpec.describe WorkerPool do
       pool.send(:process, job, 1)
 
       expect(job.reload.status).to eq("completed")
+    end
+  end
+
+  describe "#process" do
+    let(:pool) { WorkerPool.new(concurrency: 1) }
+
+    it "calls handle_failure when the job raises an error" do
+      job = Job.create!(job_class: "FailingJob", args: "[]", status: "running", attempts: 0, max_attempts: 3)
+
+      pool.send(:process, job, 1)
+
+      expect(job.reload.status).to eq("pending")
+      expect(job.reload.attempts).to eq(1)
+      expect(job.reload.last_error).to eq("something went wrong")
     end
   end
 
