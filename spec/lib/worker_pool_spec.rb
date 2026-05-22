@@ -78,6 +78,20 @@ RSpec.describe WorkerPool do
     end
   end
 
+  describe "#work_loop" do
+    it "picks up a pending job and processes it to completion" do
+      job  = TestJob.perform_async("hello")
+      pool = WorkerPool.new(concurrency: 1)
+
+      pool.start
+      sleep 0.1 # give thread time to process
+
+      expect(job.reload.status).to eq("completed")
+
+      pool.stop
+    end
+  end
+
   describe "#claim_job" do
     let(:pool) { WorkerPool.new(concurrency: 1) }
 
