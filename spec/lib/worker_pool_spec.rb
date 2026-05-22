@@ -12,6 +12,18 @@ RSpec.describe WorkerPool do
     end
   end
 
+  describe "#process" do
+    let(:pool) { WorkerPool.new(concurrency: 1) }
+
+    it "executes the job and marks it as completed" do
+      job = Job.create!(job_class: "TestJob", args: '["hello"]', status: "running")
+
+      pool.send(:process, job, 1)
+
+      expect(job.reload.status).to eq("completed")
+    end
+  end
+
   describe "#claim_job" do
     let(:pool) { WorkerPool.new(concurrency: 1) }
 
