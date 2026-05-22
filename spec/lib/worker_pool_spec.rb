@@ -1,5 +1,9 @@
 require "rails_helper"
 
+class TestJob < ApplicationJob
+  def perform(*args); end
+end
+
 RSpec.describe WorkerPool do
   describe "#start" do
     it "creates threads equal to configured concurrency" do

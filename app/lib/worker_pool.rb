@@ -23,4 +23,11 @@ class WorkerPool
       job
     end
   end
+
+  def process(job, thread_id)
+    klass = job.job_class.constantize
+    args  = JSON.parse(job.args)
+    klass.new.perform(*args)
+    job.update!(status: "completed")
+  end
 end
