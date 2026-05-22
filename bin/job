@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Load Bundler and gems
+require_relative "../config/boot"
+require_relative "../config/environment"
+
+puts "[JobWorker] Starting worker server..."
+puts "[JobWorker] Concurrency: 5 threads"
+puts "[JobWorker] Watching queue..."
+puts "[JobWorker] Press Ctrl+C to stop"
+
+# WorkerPool will be started here once implemented
+# WorkerPool.new(concurrency: 5).start
