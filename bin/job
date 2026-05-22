@@ -10,5 +10,10 @@ puts "[JobWorker] Concurrency: 5 threads"
 puts "[JobWorker] Watching queue..."
 puts "[JobWorker] Press Ctrl+C to stop"
 
-# WorkerPool will be started here once implemented
-# WorkerPool.new(concurrency: 5).start
+pool = WorkerPool.new(concurrency: JobQueue.config.concurrency)
+pool.start
+
+trap("INT")  { pool.stop }
+trap("TERM") { pool.stop }
+
+sleep
