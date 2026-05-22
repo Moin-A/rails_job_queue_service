@@ -49,17 +49,28 @@ end
 
 `Job` is an ActiveRecord model — accessible from anywhere in Rails (controllers, console, other models, etc.).
 
-**From a controller:**
-```ruby
-MyJob.perform_async("hello", 42)
-```
-
-**From the Rails console:**
+**From a controller or console:**
 ```ruby
 MyJob.perform_async("hello", 42)
 ```
 
 This inserts a row into the `jobs` table with `status: "pending"`. The worker picks it up on its next poll.
+
+### How `perform_async` works
+
+Calling `MyJob.perform_async` goes through two layers:
+
+```
+MyJob.perform_async("hello", 42)
+  → ApplicationJob.perform_async("hello", 42)   # inherited class method
+    → Job.perform_async("MyJob", "hello", 42)   # writes the DB row
+```
+
+`ApplicationJob.perform_async` passes the job class name and args to `Job.perform_async`, which is the method that actually creates the database record. You can also call `Job.perform_async` directly if you have the class name as a string:
+
+```ruby
+Job.perform_async("MyJob", "hello", 42)
+```
 
 ---
 
